@@ -213,7 +213,9 @@ sub context_interceptors
   {
     my $self = shift;
 
-    return $self->{context_interceptors};
+    return wantarray ?
+      @{ $self->{context_interceptors} } :
+        $self->{context_interceptors};;
   }
 
 sub add_context_interceptor
@@ -232,7 +234,9 @@ sub request_interceptors
   {
     my $self = shift;
 
-    return $self->{request_interceptors};
+    return wantarray ?
+      @{ $self->{request_interceptors} } :
+        $self->{request_interceptors};
   }
 
 sub add_request_interceptor

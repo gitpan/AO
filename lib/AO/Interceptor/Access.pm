@@ -124,7 +124,10 @@ sub request_map
             die "unimplemented method [", $ctx->auth_method(), "]\n";
           }
 
-        return $req->redirect($ses->{original_location});
+        my $loc = $ses->{original_location};
+        delete $ses->{original_location};
+
+        return $req->redirect($loc);
       }
   }
 

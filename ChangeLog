@@ -1,3 +1,34 @@
+2000-10-17  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO.pm: bump version to 0.31.
+
+2000-10-08  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO/Interceptor/Access.pm: delete the original_location
+	session item once we're done with it.
+
+	* lib/AO/SessionManager/BaseSessionManager.pm (release): session
+	is not new now that we are storing it.
+
+2000-10-08  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO/Interceptor/RealmBase.pm: delete session items when done
+	with them.
+
+2000-10-07  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO/Config/Server.pm: use getValue() in the right places
+
+2000-10-07  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO/ContextManager.pm:
+	lib/AO/Context.pm: make interceptor accessors return arrays in
+	list context
+
+	* lib/AO/Config/Server.pm
+	lib/AO/Config/Context.pm: use XPath findnodes() method, better
+	error handling
+
 2000-09-04  Brian Moseley  <bcm@maz.org>
 
 	* lib/AO/ContextManager.pm (add_context): add the context's

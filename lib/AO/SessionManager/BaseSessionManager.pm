@@ -65,6 +65,8 @@ sub release
     # no storing objects referenced circularly!
     delete $ses->{session_manager};
 
+    $ses->is_new(undef);
+
     tied(%$ses)->DESTROY();
 
     return 1;

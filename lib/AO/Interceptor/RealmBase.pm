@@ -25,8 +25,8 @@ sub authenticate
 
     $req->remote_user($username);
     $ses->principal({name => $username});
-    $ses->{ao_username} = undef;
-    $ses->{ao_password} = undef;
+    delete $ses->{ao_username};
+    delete $ses->{ao_password};
 
     return 0;
   }

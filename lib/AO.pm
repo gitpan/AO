@@ -4,7 +4,7 @@ package AO;
 
 use strict;
 
-$AO::VERSION = '0.30';
+$AO::VERSION = '0.31';
 
 1;
 __END__

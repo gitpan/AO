@@ -31,21 +31,17 @@ sub read_config
     # request? and how to use the right class to instantiate
     # (Apache::AO::ContextManager, for instance)?
 
-    # XXX: why do i have to eval/die to get an exception propagated?
-    eval
-      {
-        $self->process_logger_config($xp,
-                                     $xp->find('/Server')->get_nodelist(),
-                                     $cm);
+    $self->process_logger_config($xp, $xp->findnodes('/Server'), $cm);
 
-        for my $n ($xp->find('/Server/ContextManager')->get_nodelist())
-          {
-            $self->process_logger_config($xp, $n, $cm);
-            $self->process_interceptor_config($xp, $n, $cm);
-            $self->process_context_config($xp, $n, $cm);
-          }
-      };
-    warn $@ if $@;
+    my @set = $xp->findnodes('/Server/ContextManager');
+    die "No /Server/ContextManager element found!\n" unless @set;
+
+    for my $n (@set)
+      {
+        $self->process_logger_config($xp, $n, $cm);
+        $self->process_interceptor_config($xp, $n, $cm);
+        $self->process_context_config($xp, $n, $cm);
+      }
 
     return 1;
   }
@@ -57,7 +53,10 @@ sub process_logger_config
     my $nl = shift;
     my $c = shift;
 
-    for my $n ($xp->find('./Logger', $nl)->get_nodelist())
+    my @set = $xp->findnodes('child::Logger', $nl);
+    return 1 unless @set;
+
+    for my $n (@set)
       {
         $self->add_logger($c, $n);
       }
@@ -72,8 +71,11 @@ sub process_interceptor_config
     my $nl = shift;
     my $c = shift;
 
-    for my $n ($xp->find('./ContextInterceptor', $nl)->get_nodelist(),
-               $xp->find('./RequestInterceptor', $nl)->get_nodelist())
+    my @set;
+    push @set, $xp->findnodes("child::ContextInterceptor", $nl);
+    push @set, $xp->findnodes("child::RequestInterceptor", $nl);
+
+    for my $n (@set)
       {
         $self->add_interceptor($c, $n);
       }
@@ -89,20 +91,23 @@ sub process_context_config
     my $cm = shift;
     my $l = $cm->logger();
 
-    my ($n, $path, $c, $attr, $attr_n);
-    for $n ($xp->find('./Context', $nl)->get_nodelist())
+    my @set = $xp->findnodes('child::Context', $nl);
+    die "No Contexts defined!\n" unless @set;
+
+    my ($n, $path, $c, $attr_n, $attr);
+    for $n (@set)
       {
-        $path = $n->getAttribute('path')->getValue() or
+        $path = $n->getAttribute('path') or
           die "Context tag must have path attribute\n";
 
         $c = AO::Context->new();
         for $attr_n ($n->getAttributes())
           {
             $attr = $attr_n->getName();
-            if ($c->can($attr))
+             if ($c->can($attr))
               {
                 $c->$attr($attr_n->getValue());
-              }
+               }
             else
               {
                 $l->debug("no accessor [$attr] found for context [$path]");
@@ -129,7 +134,7 @@ sub add_logger
     my $c = shift;
     my $n = shift;
 
-    my $class_name = $n->getAttribute('class_name')->getValue() or
+    my $class_name = $n->getAttribute('class_name') or
       die "Interceptor tag must have class_name attribute\n";
 
     eval "require $class_name";
@@ -144,7 +149,7 @@ sub add_logger
 
         if ($l->can($attr))
           {
-            $l->$attr($attr_n->getValue());
+            $l->$attr($attr_n);
           }
         else
           {
@@ -169,7 +174,7 @@ sub add_interceptor
     my $n = shift;
     my $l = $c->logger();
 
-    my $class_name = $n->getAttribute('class_name')->getValue() or
+    my $class_name = $n->getAttribute('class_name') or
       die "Interceptor tag must have class_name attribute\n";
 
     eval "require $class_name";

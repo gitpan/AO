@@ -30,7 +30,7 @@ sub init
     my $l = $self->logger();
     my ($i, $c);
 
-    for $i (@{ $self->context_interceptors() })
+    for $i ($self->context_interceptors())
       {
         $l->info("calling engine_init on $i");
         $i->engine_init($self);
@@ -38,7 +38,7 @@ sub init
 
     for $c ($self->contexts())
       {
-        for $i (@{ $self->context_interceptors($c) })
+        for $i ($self->context_interceptors($c))
           {
             $l->info("calling context_init on $i for $c");
             $i->context_init($c);
@@ -56,7 +56,7 @@ sub shutdown
 
     for $c ($self->contexts())
       {
-        for $i (@{ $self->context_interceptors($c) })
+        for $i ($self->context_interceptors($c))
           {
             $l->info("calling context_shutdown on $c");
             $i->context_shutdown($c);
@@ -68,7 +68,7 @@ sub shutdown
         $self->remove_context($c);
       }
 
-    for $i (@{ $self->context_interceptors() })
+    for $i ($self->context_interceptors())
       {
         $l->info("calling engine_shutdown on $i");
         $i->engine_shutdown($self);
@@ -110,7 +110,7 @@ sub service
     my @roles;
     my $status = 0;
 
-    for $i (@{ $self->request_interceptors($req) })
+    for $i ($self->request_interceptors($req))
       {
         $status = $i->context_map($req, $res);
         return $status if $status;
@@ -121,7 +121,7 @@ sub service
 
     return 404 unless $servlet = $req->servlet();
 
-    for $i (@{ $self->request_interceptors($req) })
+    for $i ($self->request_interceptors($req))
       {
         $status = $i->authenticate($req, $res);
         if ($status)
@@ -136,7 +136,7 @@ sub service
 
     if (@roles = $req->required_roles())
       {
-        for $i (@{ $self->request_interceptors($req) })
+        for $i ($self->request_interceptors($req))
           {
             $status = $i->authorize($req, $res, \@roles);
             if ($status)
@@ -152,7 +152,7 @@ sub service
 
     $servlet->load() unless $servlet->is_loaded();
 
-    for $i (@{ $self->request_interceptors($req) })
+    for $i ($self->request_interceptors($req))
       {
         $status = $i->pre_service($req, $res);
         return $status if $status;
@@ -160,7 +160,7 @@ sub service
 
     $status = $servlet->service($req, $res);
 
-    for $i (@{ $self->request_interceptors($req) })
+    for $i ($self->request_interceptors($req))
       {
         $i->post_service($req, $res);
       }
@@ -190,7 +190,7 @@ sub add_context
 
     $context->context_manager($self);
 
-    for my $i (@{ $self->context_interceptors() })
+    for my $i ($self->context_interceptors())
       {
         $i->add_context($context);
       }
@@ -210,7 +210,7 @@ sub remove_context
     my $self = shift;
     my $context = shift;
 
-    for my $i (@{ $self->context_interceptors() })
+    for my $i ($self->context_interceptors())
       {
         $i->remove_context($context);
       }
@@ -231,13 +231,13 @@ sub request_interceptors
     my $self = shift;
     my $req = shift;
 
+    my @int = @{ $self->{request_interceptors} };
     if ($req)
       {
-        return ([@{ $self->{request_interceptors} },
-                 @{ $req->context()->request_interceptors() }]);
+        push @int, $req->context()->request_interceptors();
       }
 
-    return $self->{request_interceptors};
+    return wantarray ? @int : \@int;
   }
 
 sub add_request_interceptor
@@ -260,13 +260,13 @@ sub context_interceptors
     my $self = shift;
     my $ctx = shift;
 
+    my @int = @{ $self->{context_interceptors} };
     if ($ctx)
       {
-        return ([@{ $self->{context_interceptors} },
-                 @{ $ctx->context_interceptors() }]);
+        push @int, $ctx->context_interceptors();
       }
 
-    return $self->{context_interceptors};
+    return wantarray ? @int : \@int;
   }
 
 sub add_context_interceptor
