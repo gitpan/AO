@@ -1,0 +1,11 @@
+
+Coding by Brian Moseley <bcm@maz.org>
+
+Special thanks to:
+
+Doug MacEachern <dougm@apache.org> for mod_perl
+Jeffrey Baker <jwbaker@acm.org> for Apache::Session
+Jon Swartz <swartz@transbay.net> for HTML::Mason
+Matt Sergeant <matt@sergeant.org> for XML::XPath and AxKit
+The Tomcat team <http://jakarta.apache.org/tomcat/> for a lot of great
+ideas.

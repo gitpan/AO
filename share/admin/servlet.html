@@ -1,0 +1,97 @@
+<%init>
+my $ctx_id = $r->param('context');
+
+my $c;
+my @servlets;
+my %params;
+if (defined($ctx_id))
+  {
+    my $cm = $r->context_manager();
+    $c = ($cm->contexts())[$ctx_id];
+    @servlets = $c->servlets();
+  }
+
+my $srv_id = 0;
+</%init>
+
+<html>
+  <head>
+    <title>AO Context Administration</title>
+  </head>
+  <body>
+    <div align="center">
+      <table border="0" bgcolor="#000000" cellspacing="0" cellpadding="0">
+        <tr>
+          <td width="100%">
+            <table border="0" width="100%" cellpadding="4" cellspacing="2">
+              <tr>
+                <td width="100%" bgcolor="#c0c0c0">
+                  <p align="right">
+                    <font color="red"><big><big>
+                      AO Context Administration
+                    </big></big></font>
+                    <br>
+                    Configured Servlets for <em><% $c->display_name() %></em>
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td width="100%" bgcolor="#f0f0f0">
+% if (@servlets) {
+                  <div align="center">
+%   for my $s (@servlets) {
+                    <a name="<% $srv_id %>">
+                    <table border="0" cellspacing="0" cellpadding="0" bgcolor="#000000" width="100%">
+                      <tr>
+                        <td>
+                          <table border="0" cellpadding="4" cellspacing="2" width="100%">
+                            <tr>
+                              <td colspan="2" align="right" valign="middle" bgcolor="#c0c0c0">
+                                <% $s->name() || "&nbsp;" %>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0" width="25%">
+                                <strong>Load on startup:</strong>
+                              </td>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0">
+                                      <% $s->load_on_startup() || "&nbsp;" %>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0" width="25%">
+                                <strong>Init parameters:</strong>
+                              </td>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0">
+%     %params = $s->config();
+%     for my $p (values %params) {
+                                <dl>
+                                  <dt><em><% $p->{name} %>: <% $p->{value} %></em></dt>
+                                  <dd><% $p->{description} %></dd>
+                                </dl>
+%     }
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                    </a>
+                    <br>
+%     $srv_id++;
+%   }
+                  </div>
+% } else {
+                  <p>
+There are no configured servlets for this context.
+                  </p>
+% }
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<Server>
+<!--
+  <Logger class_name="AO::Logger::Syslog"
+          log_level="info" />
+-->
+  <ContextManager>
+    <ContextInterceptor class_name="AO::Interceptor::ContextConfig" />
+    <ContextInterceptor class_name="AO::Interceptor::LoadOnStartup" />
+    <ContextInterceptor
+            class_name="AO::Interceptor::SessionManager"
+            connection_url="DBI:mysql:host=localhost;database=ao"
+            connection_name="ao"
+            connection_password="ao" />
+    <RequestInterceptor class_name="AO::Interceptor::Session" />
+    <RequestInterceptor class_name="AO::Interceptor::Access" />
+
+    <!-- example app -->
+    <Context path="/ao/examples" 
+             doc_base="share/examples" />
+
+    <!-- admin app -->
+    <Context path="/ao/admin" 
+             doc_base="share/admin">
+      <RequestInterceptor 
+            class_name="AO::Interceptor::DBIRealm"
+            connection_url="DBI:mysql:host=localhost;database=ao"
+            connection_name="ao"
+            connection_password="ao"
+	    user_table="users"
+            user_name_col="name" 
+            user_cred_col="password" 
+	    user_role_table="user_roles" 
+            role_name_col="role" />
+    </Context>
+  </ContextManager>
+</Server>

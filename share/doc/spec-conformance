@@ -1,0 +1,219 @@
+
+1.6
+
+ * is distributable infrastructure doable?
+
+2.1.3
+
+ * implement servlet mappings
+
+2.1.4
+
+ * use admin tool to specify a .war (well, war-like) file and unpack
+   it, move it into place, and set up a context
+
+3.1
+
+ * add httpservlet interface
+
+ * rewrite existing servlets to use do methods instead of service
+
+ * if servlet doesn't implement a do method, how does it get executed?
+   is there a concrete class that implements httpservlet but that is
+   subclassed by 'standard' servlets?
+
+3.2
+
+ * do we need to explicitly support single and multiple thread models?
+
+3.3
+
+ * add init, service, destroy methods to servlet interface
+
+3.3.1
+
+ * move load method from baseservlet to contextmanager? make sure it
+   instantiates the servlet
+
+ * make sure we support having more than one instance of a servlet
+   class, with different init parameters
+
+ * should we support pooling single thread model servlet instances?
+
+3.3.2
+
+ * contextmanager calls init on servlet
+
+ * add servletconfig interface
+
+ * dont call destroy if an exception is thrown on init
+
+ * if the exception specifies unavailability time, dont create and
+   initialize a new instance until after that time has passed
+
+3.3.3
+
+ * permanently unavailable servlet should be removed from service
+   (call destroy on it and blow away its servlet mappings)
+
+ * temporarily unavailable servlet should return 503 and retry-after
+   header
+
+3.3.4
+
+ * to remove from service, contextmanager calls destroy on servlet and
+   then gets rid of the instance
+
+4
+
+ * add servletcontext interface
+
+4.1
+
+ * do we need a default context? is this for servlets that handle
+   *.xml for the entire web server, for instance?
+
+4.2
+
+ * add init_parameter, init_parameter_names
+
+4.3
+
+ * add attribute, attribute_names
+
+4.4
+
+ * add resource and resource_as_stream
+
+4.5
+
+ * !!!!	each virtual host must have its own context! what implications
+   does this have?
+
+4.7
+
+ * provide per-context attribute javax.servlet.context.tempdir. the
+   value should be a dirhandle
+
+5
+
+ * add httpservletrequest interface
+
+5.1
+
+ * change param to parameter (read only)
+
+ * add parameter_names, parameter_values (read only)
+
+ * parameter values are ordered. parameter should return the first
+   element of the array of values that is returned from
+   parameter_values.
+
+ * query string values take ordered precedence over content body
+   values.
+
+5.2
+
+ * add attribute, attribute_names (one value per name)
+
+5.3
+
+ * add header, headers, header_names
+
+ * header must return the value of the first header with that name
+
+ * do we need int_header or date_header?
+
+5.4
+
+ * default context's context path is "", otherwise context path starts
+   with /. context path does not end with /
+
+ * servlet path is the url from the matched servlet mapping. starts
+   with /
+
+ * path_info is the part of the request path that is not context path
+   or servlet path.
+
+ * add context_path, servlet_path, path_info
+
+ * request_uri = context_path . servlet_path . path_info
+
+5.5
+
+ * add real_path (returns filesystem path)
+
+ * add path_translated (returns real path of path_info)
+
+5.6
+
+ * add cookies
+
+5.7
+
+ * add is_secure (read only)
+
+ * provide certs in request attribute
+
+5.8
+
+ * add locale, locales
+
+ * if no locale is specified by client, return the default locale for
+   the container
+
+6
+
+ * add httpservletresponse interface
+
+6.1
+
+ * add buffer_size. returns size or 0. can only set size if content
+   has not yet been written (else exception).
+
+ * add is_committed (bool)
+
+ * add reset (clears buffer, headers, status code unless is_committed)
+
+ * add flush_buffer
+
+ * when buffer is filled, immediately flush. the first time this
+   happens, the response is committed.
+
+6.2
+
+ * add header (replaces existing headers)
+
+ * add add_header (doesn't replace existin headers)
+
+ * do we need int_header or date_header?
+
+ * headers set after response is committed are ignored
+
+6.3
+
+ * add send_redirect. partial urls must be translated to full urls.
+
+ * add send_error. string can be provided to be used in content body.
+
+ * side effect is to commit the response. any further data written to
+   response will be ignored.
+
+ * if data in buffer but not committed, clear it and replace it with
+   send_* data.
+
+ * if response is committed, throw exception.
+
+6.4
+
+ * add locale. should be called before any data is written to buffer.
+
+ * !!! should we use stream objects that have encoding/decoding
+   filters on them?
+
+ * if content_type is called after locale and there is a charset in
+   the content type, that charset overrides the locale.
+
+ * response is considered sent and closed when: servlet service method
+   ends, when content length of data has been written, when send_* has
+   been called. when response is closed, buffer should be flushed.

@@ -1,0 +1,463 @@
+2000-09-04  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO/ContextManager.pm (add_context): add the context's
+	WEB-INF/lib directory to @INC. do it here rather than in
+	context_init() so that we can load interceptors and such from the
+	context's lib directory before we initialize the context.
+	(remove_context): remove the context's WEB-INF/lib directory from
+	@INC.
+
+	* lib/AO/Interceptor/ContextConfig: move @INC manipulation to
+	ContextManager.
+
+2000-08-06  Brian Moseley  <bcm@maz.org>
+
+	* lib/Apache/AO.pm
+	bin/ao.PL: support relocatable server.xml via AO_CONFIG
+	environment variable
+
+	* etc/server.xml: remove non-generic web apps
+
+2000-07-18  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO/Logger/BaseLogger.pm: new class that defines a logging
+	interface.
+
+	* lib/AO/Logger/Syslog.pm: logger subclass that uses
+	 syslog. doesn't work, but might be a configuration issue.
+
+	* lib/Apache/AO/Logger.pm: logger subclass that uses
+	Apache::Log.
+
+	* lib/AO/Context.pm: add logger ivar, so that contexts can have
+	their own logs.
+
+	* lib/AO/ContextManager.pm: whack unneeded logging stuff. add
+	logger ivar. use logger instead of warn everywhere
+	(shutdown): close context and own logs at shutdown time, assume
+	they are opened when originally set.
+
+	* lib/Apache/AO/ContextManager.pm: add logger accessor. if a
+	logger is requested but one hasn't been set, set an Apache
+	logger.
+
+	* lib/AO/Config/Server.pm: process Logger elements within
+	ContextManager elements and within Context elements. use logger
+	instead of warn everywhere.
+
+	* etc/server.xml: add a Logger
+
+	* lib/AO/Interceptor/ContextConfig.pm: use logger instead of warn
+	everywhere.
+
+2000-07-16  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO/Interceptor/Access.pm (context_init): handle contexts
+	with no authentication needs.
+
+2000-07-16  Brian Moseley  <bcm@maz.org>
+
+	* share/*
+	examples/*
+	admin/*
+	doc/*: moved doc, admin and examples stuff under share dir.
+
+2000-07-16  Brian Moseley  <bcm@maz.org>
+
+	* examples/mason/admin/index.html
+	examples/mason/admin/servlet.html: add pages to display
+	configuration of currently loaded contexts and servlets. no adding
+	or deleting.
+
+	* examples/admin.html: remove
+
+	* examples/mason/WEB-INF/web.xml: protect admin/* instead of
+	admin.html.
+
+	* lib/AO/Context.pm (servlets): return array of servlets in list
+	context.
+
+	* lib/AO/Servlet/BaseServlet.pm (config): return hash of
+	parameters in array context.
+	(init_parameter): save name attribute as well
+
+2000-07-15  Brian Moseley  <bcm@maz.org>
+
+	* etc/server.xml: add jw app.
+
+	* examples/mason/admin.html: page accessible only to users with
+	admin role
+
+	* examples/mason/WEB-INF/web.xml: add security-constraint,
+	security-role and security-role-ref elements for mason app.
+
+	* lib/AO/Config/Server.pm: some cleanup and tracing.
+
+	* lib/AO/Config/Context.pm: handle auth-constraint element, use
+	roles in security constraints. handle security-role-ref
+	element. still not sure where security-role element fits! some
+	cleanup.
+
+	* lib/AO/Context.pm: add roles to security constraints. return
+	security patterns in reverse order of configuration.
+
+	* lib/AO/ContextManager.pm: store contexts internally with an
+	array and an index hash, rather than just a hash. add some
+	trace output.
+	(init_context): unneeded
+	(shutdown_context): unneeded
+	(service): for some reason apache/netscape doesn't like me using a
+	401 custom response handler, so just redirect to form error
+	page. cleaner this way anyway, in terms of user-visible location.
+
+	* lib/AO/Request.pm: use remote_user and required_roles in sane
+	fashions.
+	(redirect): utility method for making external redirects
+
+	* lib/AO/Servlet/BaseServlet.pm: add security_roles ivar.
+
+	* lib/AO/Interceptor/Authen.pm
+	lib/AO/Interceptor/Access.pm: rename Authen to Access. rework the
+	interface with ContextManager and with Realm interceptors a
+	bit; let Realms determine authen/authz success or failure. authen
+	only happens if there is a note (normal requests) or credentials
+	(login form submission). authz only happens if there are required
+	roles for the request.
+
+	* lib/AO/Interceptor/RealmBase.pm: authen/authz interceptor
+	callbacks. check_credentials() and user_in_role() methods allow
+	for extension.
+
+	* lib/AO/Interceptor/DBIRealm.pm: inherit from RealmBase. provide
+	check_credentials() and user_in_role() methods.
+
+	* lib/Apache/AO.pm: some cleanups.
+
+	* lib/Apache/AO/ContextManager.pm: don't use form login page for
+	403; use apache default, in hopes we'll eventually implement
+	servlet error pages.
+
+2000-07-12  Brian Moseley  <bcm@maz.org>
+
+	* etc/server.xml: move DBIRealm interceptor inside the Context.
+
+	* lib/AO/Context.pm: add context_interceptors and
+	request_interceptors ivars.
+
+	* lib/AO/ContextManager.pm: pass context or request to interceptor
+	accessors so as to be able to find their interceptors as well.
+
+	* lib/AO/Config/Server.pm: break out the hairy stuff into separate
+	methods. process interceptors found inside contexts. get closer to
+	support for multiple context managers.
+
+2000-07-11  Brian Moseley  <bcm@maz.org>
+
+	* lib/Apache/AO/ContextManager.pm: new subclass that overrides the
+	service method to set 403 custom response for the login page.
+
+2000-07-11  Brian Moseley  <bcm@maz.org>
+
+	* examples/mason/WEB-INF/web.xml: add security constraint for the
+	sample app, defaulting to /* and all methods
+
+	* lib/AO/Context.pm: add security_constraints and
+	security_patterns ivars
+
+	* lib/AO/Config/Context.pm: break out the hairy stuff into
+	separate methods. add security constraint processing.
+
+	* lib/AO/Interceptor/Authen.pm (authenticate): match the servlet
+	path against the context's security constraints in order to decide
+	whether or not the request should be authenticated. security
+	check, login page and error page not subject to said matching.
+
+2000-07-09  Brian Moseley  <bcm@maz.org>
+
+	* etc/server.xml: some cleanups
+
+	* lib/AO/ContextManager.pm (service): pass response object to
+	context_map and request_map hook methods
+
+	* lib/AO/Request.pm: add servlet_path ivar. add user_principal
+	accessor, which if the request's remote_user is set, returns the
+	session's principal (creating a new one if necessary).
+
+	* lib/AO/Session.pm: add principal ivar.
+
+	* lib/AO/Interceptor/Authen.pm: refactor this class a bit. make it
+	a base class for authentication interceptors, which must implement
+	the check_credentials() method.
+
+	* lib/AO/Interceptor/ContextInterceptor.pm (init): add
+
+	* lib/AO/Interceptor/RequestInterceptor.pm (init): add
+
+	* lib/AO/SessionManager/BaseSessionManager.pm (release): get rid
+	of the session manager reference so we don't serialize it as part
+	of the session
+
+	* lib/AO/SessionManager/DBI.pm (find_session, get_new_session):
+	set session manager
+
+	* lib/Apache/AO.pm: use Apache::DBI for connection management.
+	(handler): reorganize a little.
+
+	* examples/mason/login.html: login form
+
+	* lib/AO/Interceptor/DBIRealm.pm: authentication interceptor that
+	checks credentials against a DBI data source.
+
+2000-07-05  Brian Moseley  <bcm@maz.org>
+
+	* etc/server.xml: s/jw/ao/g
+
+	* lib/AO/ContextManager.pm (service): call all request interceptor
+	callbacks. use 0 (ok) or http status codes to communicate callback
+	status.
+
+	* lib/AO/Request.pm: add remote_user and required_roles ivars
+
+	* lib/AO/Interceptor/Authen.pm (init): fix up form page paths to
+	include the context path.
+	(authenticate): use this callback instead of pre_service. still
+	not working!
+
+	* lib/AO/Interceptor/ContextConfig.pm
+	lib/AO/Interceptor/LoadOnStartup.pm
+	lib/AO/Interceptor/Session.pm
+	lib/AO/Interceptor/SessionManager.pm: return 0 (ok) instead of 1.
+
+	* lib/AO/Interceptor/Session.pm (request_map): use this callback
+	instead of pre_service. reorganize so that when we find a session
+	id but can't find a session for it, we get a new session and reset
+	the session cookie.
+
+	* lib/AO/Servlet/BaseServlet.pm: add is_loaded accessor.
+
+	* lib/Apache/AO/Request.pm (remote_user): override superclass
+	method to use Apache::Connection::user().
+
+2000-07-03  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO/Config/Server.pm: rewrite using XPath.
+
+2000-06-30  Brian Moseley  <bcm@maz.org>
+
+	* etc/ao.conf: use an Alias directive so Apache can construct the
+	filename correctly. specify the full context path in the Location
+	block.
+
+	* examples/mason/WEB-INF/web.xml: bring in line with Servlet
+	Spec. add support for session, login and servlet config; display
+	name and description.
+
+	* lib/AO/Context.pm: support multiple servlets, with the first
+	being the 'default servlet'. add many new ivars.
+
+	* lib/AO/Config/Context.pm: rewrite using XPath. support many new
+	web.xml elements.
+
+	* lib/AO/Interceptor/LoadOnStartup.pm: only load servlets at
+	startup if they are configured in web.xml. enforce load order.
+
+	* lib/AO/Servlet/BaseServlet.pm: add load on startup ivar. add a
+	really cheesy servlet config ivar for accessing init parameters.
+
+	* lib/AO/Servlet/Mason.pm: support parser, interp and handler init
+	parameters.
+
+	* lib/Apache/AO.pm: move context mapping back into the handler
+	routine. it really is just silly to do context mapping in an
+	interceptor. always use the default servlet.
+
+	* lib/Apache/AO/Interceptor/Mapper.pm: remove
+
+2000-06-30  Brian Moseley  <bcm@maz.org>
+
+	* etc/server.xml
+	lib/AO/Interceptor/Session.pm
+	lib/Apache/AO/Interceptor/Mapper.pm: count the Apache location as
+	part of the context path. this allows us to have /foo/examples and
+	/bar/examples as two different contexts.
+
+2000-06-28  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO/Cookie.pm: new cookie class
+
+	* lib/AO/Request.pm: add cookies ivar
+
+	* lib/AO/Response.pm: add cookies ivar and add_cookies method
+
+	* lib/AO/Interceptor/Session.pm: replace use of Apache::Cookie
+	with new cookie api
+
+	* lib/Apache/AO/Request.pm: use Apache::Cookie instead of
+	AO::Cookie, this works cos they have exactly the same
+	interface. override cookies method.
+
+	* lib/Apache/AO/Response.pm: override add_cookie method to
+	actually set the cookie. a bit of ugliness necessary to convert
+	the AO::Cookie format into Apache::Cookie format.
+
+2000-06-28  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO/SessionManager.pm
+	lib/AO/SessionManager/BaseSessionManager.pm: renamed
+
+	* lib/AO/Interceptor/Session.pm
+	lib/AO/Interceptor/SessionManager.pm
+	lib/Apache/AO/Interceptor/Session.pm
+	lib/Apache/AO/Interceptor/SessionManager.pm: renamed
+
+	* lib/AO/SessionManager/DBI.pm
+	lib/Apache/AO/SessionManager/DBI.pm: renamed
+
+	* lib/Apache/AO/Session.pm
+	lib/Apache/AO/SessionManager.pm: removed
+
+	* Makefile.PL: make Apache::Session a prereq, make Apache and
+	Apache::Request not prereqs for now, will add a method for hooking
+	that up at compile time
+
+	* etc/server.xml: use new class names
+
+2000-06-27  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO/Session.pm
+	lib/AO/SessionManager.pm: added base classes
+
+	* lib/Apache/AO/Session.pm
+	lib/Apache/AO/SessionManager.pm
+	lib/Apache/AO/Sessionmanager/DBI.pm: added implementations of
+	Session and SessionManager that use Apache::Session and that
+	transmit session ids via cookies. only support the DBI storage
+	facilities of Apache::Session for now.
+
+	* etc/server.xml: add SessionManager and Session interceptors
+
+	* lib/AO/Context.pm: add session_manager ivar
+
+	* lib/AO/Request.pm: add session ivar
+
+	* lib/AO/Servlet/Mason.PM: make the session available to Mason
+	components
+
+	* examples/mason/index.html: show the session id!
+
+	* lib/AO/Config/Server.pm: only call an accessor method if the
+	class has the method
+
+	* etc/ao.conf: make the default type text/html
+
+2000-06-27  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO/Interceptor/RequestInterceptor.pm: add pre_service and
+	post_service hook methods
+
+	* lib/AO/ContextManager.pm (set_defaults): remove
+	(service): add pre_service and post_service request interceptor
+	hooks
+
+	* lib/Apache/AO/Interceptor/Mapper.pm
+	lib/Apache/AO.pm
+	server.xml: moved context mapping into a request interceptor
+
+2000-06-26  Brian Moseley  <bcm@maz.org>
+	
+	* etc/ao.conf: run under debugger when httpd started with
+	-DDEBUG. run as my user and group. preload modules. deny access to
+	WEB-INF directories.
+
+	* lib/AO/Servlet/BaseServlet.pm (init): add
+	(load): add
+
+	* lib/AO/Servlet/Mason.pm (load): construct Mason parser,
+	interpreter, and handler.
+	(service): delegate service to handler. handler will eventually be
+	phased out.
+
+	* lib/Apache/AO.pm (_context_map): reset uri and filename to be
+	relative to the context's path, rather than apache's document
+	root.
+
+	* lib/AO/Interceptor/LoadOnStartup.pm
+	etc/server.xml: enable a context interceptor that, when
+	intializing a context, loads its servlet.
+
+	* lib/AO/Interceptor/Contextconfig.pm: use File::Spec to construct
+	file name; it's more portable.
+
+2000-06-26  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO/Config.pm
+	lib/AO/Config/Server.pm: renamed AO::Config to AO::Config::Server.
+
+	* lib/AO/Config/Context.pm: added web.xml configurator class. only
+	handles the servlet element.
+
+	* lib/AO/Interceptor/ContextInterceptor.pm: add do-nothing methods
+	for context interceptor hooks.
+
+	* lib/AO/Interceptor/ContextConfig.pm: added a context interceptor
+	for parsing web.xml files and configuring contexts.
+
+	* lib/AO/Servlet.pm
+	lib/AO/Servlet/BaseServlet.pm: renamed AO::Servlet to
+	AO::Servlet::BaseServlet.
+
+	* lib/AO/Servlet/Mason.pm: stubbed out a Mason servlet.
+
+	* examples/mason/WEB-INF/web.xml: added an example application
+	directory and web.xml file using the Mason servlet.
+
+	* etc/server.xml: use ContextConfig interceptor. change example
+	context to use mason example application.
+
+	* bin/ao.PL: track name changes
+
+	* lib/Apache/AO.pm track name changes
+
+2000-06-26  Brian Moseley  <bcm@maz.org>
+
+	* lib/Apache/AO.pm: make $cm static
+	(_context_map): find a context for the request. strip off the
+	Apache location, since / in AO-space is mounted to /location in
+	Apache-space.
+
+	* lib/AO/ContextManager.pm (service): for now, delegate servicing
+	the request to the request's servlet. request interceptors will be
+	added later.
+
+	* lib/AO/Servlet.pm: add servlet class
+
+	* lib/AO/Context.pm: associate a context with a servlet
+
+	* lib/AO/Request.pm: add init method and context and servlet
+	ivars.
+
+	* lib/AO/Response.pm: add init method.
+
+	* lib/Apache/AO/Request.pm
+	lib/Apache/AO/Response.pm: inherit from Apache::Request and set
+	the _r ivar so that Apache::Request methods can be called directly
+	on the object.
+
+2000-06-26  Brian Moseley  <bcm@maz.org>
+
+	* etc/ao.conf: revise Apache config file. "mount" the AO namespace
+	to a <Location>. set $ENV{AO_HOME} so we know where to find
+	application directory.
+
+2000-06-21  Brian Moseley  <bcm@maz.org>
+
+	* MANIFEST.SKIP
+	MANIFEST
+	Makefile.PL: integrated MakeMaker
+
+	* bin/ao.PL: extract this script from a .PL file so we can use
+	Config.pm to set the shebang line. add some doc.
+
+2000-06-21  Brian Moseley  <bcm@maz.org>
+
+	* initial import

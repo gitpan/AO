@@ -1,0 +1,153 @@
+<%init>
+my $cm = $r->context_manager();
+my @contexts = $cm->contexts();
+my $ctx_id = 0;
+my $srv_id = 0;
+</%init>
+
+<html>
+  <head>
+    <title>AO Context Administration</title>
+  </head>
+  <body>
+    <div align="center">
+      <table border="0" bgcolor="#000000" cellspacing="0" cellpadding="0">
+        <tr>
+          <td width="100%">
+            <table border="0" width="100%" cellpadding="4" cellspacing="2">
+              <tr>
+                <td width="100%" bgcolor="#c0c0c0">
+                  <p align="right">
+                    <font color="red"><big><big>
+                      AO Context Administration
+                    </big></big></font>
+                    <br>
+                    Configured Contexts
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td width="100%" bgcolor="#f0f0f0">
+% if (@contexts) {
+%   for my $c (@contexts) {
+                  <div align="center">
+                    <table border="0" cellspacing="0" cellpadding="0" bgcolor="#000000" width="100%">
+                      <tr>
+                        <td>
+                          <table border="0" cellpadding="4" cellspacing="2" width="100%">
+                            <tr>
+                              <td colspan="2" align="right" valign="middle" bgcolor="#c0c0c0">
+                                <% $c->display_name() || "&nbsp;" %>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0" width="25%">
+                                <strong>Description:</strong>
+                              </td>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0">
+                                <% $c->description() || "&nbsp;" %>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0" width="25%">
+                                <strong>Path:</strong>
+                              </td>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0">
+                                <a href="<% $c->path() %>"><% $c->path() %></a>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0" width="25%">
+                                <strong>Doc base:</strong>
+                              </td>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0">
+                                <% $c->doc_base() || "&nbsp;" %>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0" width="25%">
+                                <strong>Full doc base:</strong>
+                              </td>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0">
+                                <% $c->absolute_path() || "&nbsp;" %>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0" width="25%">
+                                <strong>Session timeout:</strong>
+                              </td>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0">
+                                      <% $c->session_timeout() || "&nbsp;" %>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0" width="25%">
+                                <strong>Auth method:</strong>
+                              </td>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0">
+                                <% $c->auth_method() || "&nbsp;" %>
+                              </td>
+                            </tr>
+%     if ($c->auth_method() eq 'BASIC') {
+                            <tr>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0" width="25%">
+                                <strong>Realm name:</strong>
+                              </td>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0">
+                                <% $c->realm_name() || "&nbsp;" %>
+                              </td>
+                            </tr>
+%     }
+%     if ($c->auth_method() eq 'FORM') {
+                            <tr>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0" width="25%">
+                                <strong>Form login page:</strong>
+                              </td>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0">
+                                <% $c->form_login_page() || "&nbsp;" %>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0" width="25%">
+                                <strong>Form error page:</strong>
+                              </td>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0">
+                                <% $c->form_error_page() || "&nbsp;"%>
+                              </td>
+                            </tr>
+%     }
+                            <tr>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0" width="25%">
+                                <strong>Servlets:</strong>
+                              </td>
+                              <td align="right" valign="middle" bgcolor="#f0f0f0">
+%     for my $s ($c->servlets) {
+                                <a href="./servlet.html?context=<% $ctx_id %>#<% $srv_id %>"><% $s->name() %></a><br>
+%       $srv_id++;
+%     }
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                    <br>
+%     $ctx_id++;
+%     $srv_id = 0;
+%   }
+                  </div>
+% } else {
+                  <p>
+There are no configured contexts. Curious. If that's the case, how
+could we be serving this page?
+                  </p>
+% }
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

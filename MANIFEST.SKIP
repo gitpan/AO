@@ -1,0 +1,12 @@
+~$
+^MANIFEST\.
+^Makefile$
+^Makefile.old$
+^blib/
+^pm_to_blib$
+CVS/
+\.cvsignore$
+\.config$
+^bin/ao$
+WEB-INF/var
+\.tar\.gz$

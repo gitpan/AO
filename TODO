@@ -1,0 +1,55 @@
+
+enhancements:
+
+ * doc
+ * redo context and request map in terms of servlet api and put them
+   in an interceptor
+ * servlet mapping and containers
+ * servlet api
+ * interface pragma
+ * spec conformance
+ * error pages
+ * write axkit servlet
+ * xinclude in xml config files
+ * fix up session manager so it can retrieve a list of sessions for a
+   context, so we can expire all of them at once
+ * session expiration tool
+ * resource mgmt (connection pooling etc)
+ * out-of-process mode
+ * basic, digest, cert, ldap auth
+ * file, ldap authz
+
+bugs:
+
+ * install should put server.xml somewhere? share somewhere?
+ * shouldn't be able to request login page from an authenticated
+   session
+ * eval doesn't catch any exceptions thrown after find() is called on
+   an XPath object..?
+ * syslog output isnt showing up.. is it a problem in the code, or in
+   my syslog configuration?
+ * AO::Request and AO::Response interfaces not used consistently
+ * content type not getting set to text/html before AO takes over
+ * load-on-startup with no value isn't being found by xpath
+ * url rewriting not supported
+ * welcome page not supported
+ * non-dbi session stores not supported
+ * in xml config files, use my own identifier (and dtd?)
+ * cookie as_string() not implemented
+ * context_init() doesn't get called on contexts that aren't added before the
+   context manager's init(); similar with context_shutdown()
+
+thoughts:
+
+ * consider moving authen/authz into access interceptor, and having it
+   ask a realm directly to do check_credentials() and user_in_role()
+ * should we implement the full web.xml and then write an apache
+   config file, or let the admin set up the apache config file
+   manually?
+ * any use for an adapter base class? would be more parallel
+ * any reason to validate server.xml and web.xml?
+ * how to handle session store failure?
+ * any need for 'sticky' sessions? ie, marking the session id with the
+   location of the specific web server (or oop ao server)?
+ * what to do about session id security? without ssl/certs, how can we
+   be sure the same client is sending the session id each time?

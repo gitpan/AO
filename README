@@ -1,0 +1,194 @@
+
+AO - a Perl Servlet Engine
+==========================
+
+  AO is a servlet engine for Perl. It provides an application
+  environment with such features as session tracking and persistence,
+  security (authentication and authorization), simple configuration,
+  and customizable logging. It also eventually will implement a Perl
+  version of the (Java) Servlet API, providing applications with a
+  well known model for application construction that abstracts the
+  process model and deployment environment away from the developer.
+
+  AO is partially based on Tomcat, the Apache servlet engine. It's
+  not a straight port, altho I've used that description sometimes,
+  when it's easier than to explain what I really am doing. The
+  architecture and terminology are very similar but I've taken the
+  opportunity to correct some flaws and to introduce Perl-isms where
+  appropriate. I'll probably continue to use Tomcat (and it's
+  descendent, Catalina) as references, but I predict the architectures
+  will eventually stat to noticeably diverge.
+
+Installation:
+
+  For now, in order to use AO you need to be running with mod_perl
+  (see below for more information on alternative deployments), so make
+  sure you have that installed.
+
+  There are a set of base prerequisites for the framework
+  itself. These are listed in Bundle::AO::Base, and you can install
+  them with the following command:
+
+    perl -I/path/to/AO-x.xx/lib -MCPAN -e 'install Bundle::AO::Base'
+
+  In order for AO to be useful out of the box, you'll also need to
+  have HTML::Mason installed, and you'll need to be running one of the
+  databases that Apache::Session supports. To my knowledge, that
+  includes MySQL, Postgres, and Oracle. There may be more, I dunno. In
+  any event, you can use Bundle::AO::Standard to nail these guys
+  (altho I haven't included specific DBI drivers since I don't know
+  what database you're using). If you are planning to develop new
+  interceptors, however, you might be able to skip this step.
+
+    perl -I/path/to/AO-x.xx/lib -MCPAN -e 'install Bundle::AO::Standard'
+
+  Finally, to install the AO libraries, simply follow the standard
+  MakeMaker procedure:
+
+    cd AO-x.xx
+    perl Makefile.PL
+    make
+    make test
+    make install
+
+  This procedure doesn't install server.xml or any of the
+  examples. See the next section for details on getting the software
+  running.
+
+Configuration:
+
+  You'll have to do some tinkering with both your Apache configuration
+  and server.xml, the AO config file. Examples are provided in the etc
+  subdirectory of the distribution.
+
+  To get up and running quickly, I suggest the following:
+
+    o Copy etc/ao.conf into your Apache config directory
+    o Inside that copy, change the Alias line to reflect the location
+      of the share directory inside your unpacked distribution
+    o Copy etc/server.xml into your Apache config directory
+    o Inside that copy, customize the database information for the
+      SessionManager and DBIRealm interceptors
+    o Make sure you have a database online, with the following:
+       * a sessions table, with structure specified by Apache::Session
+       * a security table, with structure specified by the DBIRealm
+         interceptor configuration in server.xml
+
+  If all goes well, you should be able to turn on your httpd, point
+  your browser at /ao and see a page titled 'AO Servlet Engine'.
+
+Documentation:
+
+  Well yeah, there's not much. There's a pretty good overview in the
+  AO manpage (`perldoc AO'), which should give you a decent idea of
+  the goals of the software and its architecture. None of the rest of
+  the modules are documented, however. I suggest you get the software
+  running and then fire up the interactive debugger. This will give
+  you battlefield experience, and that type of insight is often more
+  valuable than API documentation. Nonetheless, I hope to eventually
+  provide complete reference material for each class, as well as more
+  task-oriented documentation. Any tech writers want to help?
+
+Support:
+
+  As of now there are no web site, bug system, mailing list, or other
+  project overhead. There's just me and my CVS repository. If you have
+  problems, feel free to mail me directly, but it's probably better to
+  send your questions to the modperl list (modperl@apache.org) so that
+  others can benefit from the answer as well.
+
+General Comments:
+
+  Don't misunderstand me. This is not even close to being considered
+  production software. It works pretty well for my small personal
+  projects that have no real security, uptime, robustness or
+  performance requirements. It's very, very incomplete, however; the
+  only interceptors in the distribution are the ones I use personally,
+  and I haven't gotten around to providing alternate implementations
+  of things like session persistence and authentication. I've only
+  implemented a tiny bit of the Servlet API, so there's still no
+  chance to write portable applications - you're using a subclass of
+  Apache::Request with a few Servlet API methods. The internal
+  architecture is going to change drastically, so if you write
+  interceptors, you will have to rewrite them someday when I move to
+  Catalina-style valves. For these reasons, and many others, you are
+  advised to not consider this software for production usage.
+
+  That said, I'd really be stoked if even just a few people got
+  interested in what I'm doing here and started writing interceptors,
+  or helping with the core. At the end of the day, the software really
+  does fill a need - I can actually write applications without
+  spending more than 5 minutes worrying about how I'm going to handle
+  sessions or logins. The prospect of making a useful tool is, for me
+  at least, much brighter now.
+
+  I do realize of course that mine is just one style of app
+  development, and I haven't begun to address the needs of many other
+  styles. Not that I haven't thought about it - see the TODO file; I'd
+  like to write an AxKit servlet, add 'munged url' session tracking,
+  provide several session persistence and security interceptors,
+  etc. But right now I don't have the time to implement things I'm not
+  actually using myself. That, again, is where the rest of you come
+  in.
+
+  Some of you might ask "why don't you use more of the components
+  available on CPAN?". Good question. The answer is: I don't like
+  their interfaces, or their implementations, or their authors, or
+  their names, or something else about them. I generally try to
+  balance this attitude against the utility of using proven, familiar
+  code, but often the component is simple enough (and my need is
+  different enough than that component's original need) that I'd
+  rather provide my own.
+
+Note on Servlet API support:
+
+  There is currently no implementation of the Java Servlet API in
+  Perl. AO intends to be as conformant as possible and reasonable to the
+  Java Servlet Specification, including eventually presenting as much of
+  the Java Servlet API as makes sense (and recast in a more natural Perl
+  format) to servlet applications. However, I'm going to concentrate
+  for a while on providing framework functionality and on stabilizing
+  the internal architecture; applications will continue to have access
+  to the `native' server API, and parts of the Servlet API may be
+  implemented as necessary. I'll get back to the Servlet API when I
+  feel that the servlet engine itself is stable and addresses a
+  significant variety of developer needs.
+
+Note on process model support:
+
+  The only process model currently supported is the Apache/mod_perl
+  in-process-webserver model. Once the internal architecture is stable
+  and the Servlet API is fully supported, I'll consider writing an
+  adapter for FastCGI or some other out-of-process model. I know it's
+  heresy on the mod_perl list, but I'd really like to have the option
+  of running inside a single perl interpreter, with no Apache at all.
+
+FAQ:
+
+  o What's the name mean?
+
+    My creativity does not shine forth in the names of my software. I
+    wanted something really short and relatively meaningless (same
+    motivation as 'ix', actually). 'AO' is a cute combination of
+    vowels that you can pronounce several different ways. It's easy to
+    type, that's the best part. Anyway, consider it a 'working
+    title'. If somebody comes up with a better name, I'd be happy to
+    consider changing.
+
+  o Where can I find more information about servlets?
+
+    Try these URLs:
+
+      http://java.sun.com/products/servlet/
+      http://jakarta.apache.org/tomcat/
+
+    Also, the Servlet Specification 2.2 is available in the share/docs
+    directory in the distribution.
+
+--
+
+Hopefully this is enough to get you started and to whet your
+appetite. Happy hacking.
+
+Brian Moseley
+ix@maz.org
