@@ -102,7 +102,9 @@ sub request_map
         # fails.
 
         $req->notes('ao.do_authen' => 1);
-        $ses->{original_location} = $uri;
+
+        $ses->{original_location} ||= {};
+        $ses->{original_location}->{$ctx->realm_name()} = $uri;
 
         return 0;
       }
@@ -124,8 +126,9 @@ sub request_map
             die "unimplemented method [", $ctx->auth_method(), "]\n";
           }
 
-        my $loc = $ses->{original_location};
-        delete $ses->{original_location};
+        my $realm = $ctx->realm_name();
+        my $loc = $ses->{original_location}->{$realm};
+        delete $ses->{original_location}->{$realm};
 
         return $req->redirect($loc);
       }

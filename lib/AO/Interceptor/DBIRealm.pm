@@ -20,17 +20,16 @@ sub check_credentials
                    { RaiseError => 1}) or
                      die "Can't connect to authen db: $DBI::errstr\n";
 
-    my $sth =
-      $dbh->prepare(sprintf(q(SELECT %s FROM %s WHERE %s = %s),
-                                    $self->user_cred_col(),
-                                    $self->user_table(),
-                                    $self->user_name_col(),
-                                    $dbh->quote($credentials->{username})));
-    my $rs = $dbh->selectall_arrayref($sth);
+    my $sql = sprintf(q(SELECT %s FROM %s WHERE %s = %s),
+                      $self->user_cred_col(),
+                      $self->user_table(),
+                      $self->user_name_col(),
+                      $dbh->quote($credentials->{username}));
+    my $passwd = $dbh->selectrow_array($sql);
 
     $dbh->disconnect();
 
-    return $rs && $rs->[0]->[0] && $rs->[0]->[0] eq $credentials->{password};
+    return $passwd && $passwd eq $credentials->{password};
   }
 
 sub user_in_role
@@ -46,23 +45,33 @@ sub user_in_role
                    { RaiseError => 1}) or
                      die "Can't connect to authen db: $DBI::errstr\n";
 
-    my $sth =
-      $dbh->prepare(sprintf(q(SELECT %s FROM %s WHERE %s = %s),
-                                    $self->role_name_col(),
-                                    $self->user_role_table(),
-                                    $self->user_name_col(),
-                                    $dbh->quote($username)));
-    my $rs = $dbh->selectall_arrayref($sth);
+    my $sql =sprintf(q(SELECT %s.%s FROM %s, %s, %s WHERE %s.%s = %s AND %s.%s=%s.%s AND %s.%s=%s.%s),
+                     $self->role_table(),
+                     $self->role_name_col(),
+                     $self->user_table(),
+                     $self->role_table(),
+                     $self->user_role_table(),
+                     $self->user_table(),
+                     $self->user_name_col(),
+                     $dbh->quote($username),
+                     $self->user_table(),
+                     $self->user_id_col(),
+                     $self->user_role_table(),
+                     $self->user_role_user_id_col(),
+                     $self->user_role_table(),
+                     $self->user_role_role_id_col(),
+                     $self->role_table(),
+                     $self->role_id_col(),
+                    );
+    my $dbroles = $dbh->selectcol_arrayref($sql);
 
     $dbh->disconnect();
 
-    return undef unless $rs;
-
-    for my $row (@$rs)
+    for my $dbrole (@$dbroles)
       {
         for my $role (@$roles)
           {
-            return 1 if $row->[0] eq $role;
+            return 1 if $dbrole eq $role;
           }
       }
 
@@ -101,6 +110,14 @@ sub user_table
     return $self->{user_table};
   }
 
+sub user_id_col
+  {
+    my $self = shift;
+    $self->{user_id_col} = shift if @_;
+
+    return $self->{user_id_col};
+  }
+
 sub user_name_col
   {
     my $self = shift;
@@ -117,12 +134,20 @@ sub user_cred_col
     return $self->{user_cred_col};
   }
 
-sub user_role_table
+sub role_table
   {
     my $self = shift;
-    $self->{user_role_table} = shift if @_;
+    $self->{role_table} = shift if @_;
 
-    return $self->{user_role_table};
+    return $self->{role_table};
+  }
+
+sub role_id_col
+  {
+    my $self = shift;
+    $self->{role_id_col} = shift if @_;
+
+    return $self->{role_id_col};
   }
 
 sub role_name_col
@@ -131,6 +156,30 @@ sub role_name_col
     $self->{role_name_col} = shift if @_;
 
     return $self->{role_name_col};
+  }
+
+sub user_role_table
+  {
+    my $self = shift;
+    $self->{user_role_table} = shift if @_;
+
+    return $self->{user_role_table};
+  }
+
+sub user_role_user_id_col
+  {
+    my $self = shift;
+    $self->{user_role_user_id_col} = shift if @_;
+
+    return $self->{user_role_user_id_col};
+  }
+
+sub user_role_role_id_col
+  {
+    my $self = shift;
+    $self->{user_role_role_id_col} = shift if @_;
+
+    return $self->{user_role_role_id_col};
   }
 
 1;

@@ -1,3 +1,11 @@
+2000-12-31  Brian Moseley  <bcm@maz.org>
+
+	* lib/AO/Interceptor/Access.pm: account for post-authentication
+	redirection for multiple realms
+
+	* lib/AO/Interceptor/DBIRealm.pm: use 3 tables: one for users, one
+	for roles, one for relating users to roles
+
 2000-10-17  Brian Moseley  <bcm@maz.org>
 
 	* lib/AO.pm: bump version to 0.31.
